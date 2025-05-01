@@ -2,8 +2,11 @@ package uk.ac.ed.acp.cw2.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import uk.ac.ed.acp.cw2.data.RuntimeEnvironment;
+
+import java.time.Instant;
 
 /**
  * Controller class that handles various HTTP endpoints for the application.
@@ -21,6 +24,11 @@ public class ServiceController {
         this.environment = environment;
     }
 
+
+    @Scheduled(fixedRate = 1000)
+    public void fixedRateTask() {
+        logger.info("Fixed rate task running at: " + Instant.now());
+    }
 
     @GetMapping("/")
     public String index() {
