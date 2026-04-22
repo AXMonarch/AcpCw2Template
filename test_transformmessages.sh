@@ -26,7 +26,7 @@ purge_queue() {
 
 create_queue() {
     curl -s -u $RABBIT_AUTH -X PUT "$RABBIT_URL/queues/%2F/$1" \
-        -H "Content-Type: application/json" -d '{"durable":false}' > /dev/null
+        -H "Content-Type: application/json" -d '{"durable":true}' > /dev/null
 }
 
 publish_normal() {
@@ -171,6 +171,7 @@ VER=$(redis_get "ABC")
 [ "$VER" = "3" ] && pass "Redis still holds version 3" || fail "Redis version wrong: $VER"
 
 # ============================================================
+
 section "SCENARIO 5 — Tombstone writes summary and clears keys"
 
 redis_flush
@@ -191,7 +192,7 @@ TA=$(get_msg_field "$OUT" 2 "totalAdded")
 [ "$TA" = "10.5" ] && pass "totalAdded=10.5" || fail "totalAdded wrong: $TA"
 
 TW=$(get_msg_field "$OUT" 2 "totalMessagesWritten")
-[ "$TW" = "2" ] && pass "totalMessagesWritten=2" || fail "totalMessagesWritten wrong: $TW"
+[ "$TW" = "3" ] && pass "totalMessagesWritten=3" || fail "totalMessagesWritten wrong: $TW"
 
 TP=$(get_msg_field "$OUT" 2 "totalMessagesProcessed")
 [ "$TP" = "3" ] && pass "totalMessagesProcessed=3" || fail "totalMessagesProcessed wrong: $TP"
@@ -231,10 +232,10 @@ TP=$(get_msg_field "$OUT" 3 "totalMessagesProcessed")
 [ "$TP" = "4" ] && pass "Second tombstone: totalMessagesProcessed=4" || fail "totalMessagesProcessed wrong: $TP"
 
 TRU=$(get_msg_field "$OUT" 3 "totalRedisUpdates")
-[ "$TRU" = "2" ] && pass "Second tombstone: totalRedisUpdates=2" || fail "totalRedisUpdates wrong: $TRU"
+[ "$TRU" = "4" ] && pass "Second tombstone: totalRedisUpdates=4" || fail "totalRedisUpdates wrong: $TRU"
 
 TW=$(get_msg_field "$OUT" 3 "totalMessagesWritten")
-[ "$TW" = "3" ] && pass "Second tombstone: totalMessagesWritten=3" || fail "totalMessagesWritten wrong: $TW"
+[ "$TW" = "4" ] && pass "Second tombstone: totalMessagesWritten=4" || fail "totalMessagesWritten wrong: $TW"
 
 # ============================================================
 section "SCENARIO 8 — Multi-call persistence (1 message at a time)"
@@ -260,7 +261,7 @@ VER=$(redis_get "ABC")
 OUT=$(read_output)
 TW=$(get_msg_field "$OUT" 2 "totalMessagesWritten")
 TP=$(get_msg_field "$OUT" 2 "totalMessagesProcessed")
-[ "$TW" = "2" ] && pass "Multi-call: totalMessagesWritten=2" || fail "totalMessagesWritten wrong: $TW"
+[ "$TW" = "3" ] && pass "Multi-call: totalMessagesWritten=3" || fail "totalMessagesWritten wrong: $TW"
 [ "$TP" = "3" ] && pass "Multi-call: totalMessagesProcessed=3" || fail "totalMessagesProcessed wrong: $TP"
 
 # ============================================================

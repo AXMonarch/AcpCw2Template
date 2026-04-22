@@ -44,7 +44,7 @@ publish_msg() {
 # SETUP
 section "SETUP"
 curl -s -u $RABBIT_AUTH -X PUT "$RABBIT_URL/queues/%2F/splitQueue" \
-    -H "Content-Type: application/json" -d '{"durable":false}' > /dev/null
+    -H "Content-Type: application/json" -d '{"durable":true}' > /dev/null
 echo "Queues created"
 
 # ============================================================

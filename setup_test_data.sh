@@ -8,31 +8,31 @@ echo "=== Creating RabbitMQ Queues ==="
 # For endpoints 1,2 (write tests - no setup needed, just create queues)
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/testQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 # For endpoints 3,4 (read tests)
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/readTestQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 # For endpoints 5,6 (sorted tests)
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/sortedTestQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 # For endpoint 7 (splitter)
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/splitterReadQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 # For endpoint 8 (transformMessages)
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/transformReadQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 curl -s -u guest:guest -X PUT http://localhost:15672/api/queues/%2F/transformWriteQueue \
   -H "Content-Type: application/json" \
-  -d '{"durable":false}'
+  -d '{"durable":true}'
 
 echo "=== Seeding Sorted Rabbit MQ Queue (out of order) ==="
 curl -s -u guest:guest -X POST http://localhost:15672/api/exchanges/%2F//publish \

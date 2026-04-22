@@ -62,6 +62,8 @@ public class AcpController {
         try (Connection conn = factory.newConnection();
              Channel channel = conn.createChannel()) {
 
+            channel.queueDeclare(queueName, true, false, false, null);
+
             for (int i = 0; i < messageCount; i++) {
                 JsonObject msg = new JsonObject();
                 msg.addProperty("uid", STUDENT_ID);
@@ -110,6 +112,8 @@ public class AcpController {
 
         try (Connection conn = factory.newConnection();
              Channel channel = conn.createChannel()) {
+
+            channel.queueDeclare(queueName, true, false, false, null);
 
             while (System.currentTimeMillis() < deadline) {
                 GetResponse response = channel.basicGet(queueName, true);
@@ -160,6 +164,8 @@ public class AcpController {
 
         try (Connection conn = factory.newConnection();
              Channel channel = conn.createChannel()) {
+
+            channel.queueDeclare(queueName, true, false, false, null);
 
             while (messages.size() < messagesToConsider) {
                 GetResponse response = channel.basicGet(queueName, true);
@@ -232,6 +238,8 @@ public class AcpController {
 
         try (Connection conn = factory.newConnection();
              Channel channel = conn.createChannel()) {
+
+            channel.queueDeclare(readQueue, true, false, false, null);
 
             while (messages.size() < messageCount) {
                 GetResponse response = channel.basicGet(readQueue, true);
@@ -310,6 +318,9 @@ public class AcpController {
              JedisPool pool = new JedisPool(environment.getRedisHost(), environment.getRedisPort());
              Jedis jedis = pool.getResource()) {
 
+            readChannel.queueDeclare(readQueue, true, false, false, null);
+            writeChannel.queueDeclare(writeQueue, true, false, false, null);
+
             int totalMessagesWritten = jedis.exists("tm_written") ? Integer.parseInt(jedis.get("tm_written")) : 0;
             int totalMessagesProcessed = jedis.exists("tm_processed") ? Integer.parseInt(jedis.get("tm_processed")) : 0;
             int totalRedisUpdates = jedis.exists("tm_redis_updates") ? Integer.parseInt(jedis.get("tm_redis_updates")) : 0;
@@ -332,11 +343,16 @@ public class AcpController {
                 String key = msg.get("key").getAsString();
 
                 if ("TOMBSTONE".equals(key)) {
+                    // Delete tracked keys and count each deletion as a Redis update
                     Set<String> trackedKeys = jedis.smembers("tm_tracked_keys");
                     for (String trackedKey : trackedKeys) {
                         jedis.del(trackedKey);
+                        totalRedisUpdates++;
                     }
                     jedis.del("tm_tracked_keys");
+
+                    // Increment totalMessagesWritten BEFORE building summary
+                    totalMessagesWritten++;
 
                     JsonObject summary = new JsonObject();
                     summary.addProperty("totalMessagesWritten", totalMessagesWritten);
@@ -345,7 +361,6 @@ public class AcpController {
                     summary.addProperty("totalValueWritten", totalValueWritten);
                     summary.addProperty("totalAdded", totalAdded);
 
-                    totalMessagesWritten++;
                     writeChannel.basicPublish("", writeQueue, null,
                             gson.toJson(summary).getBytes(StandardCharsets.UTF_8));
 
